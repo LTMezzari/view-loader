@@ -29,7 +29,11 @@ public class TestFragment extends Fragment {
 
 	@Override
 	public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-		new ViewLoader(R.id.class, view, this).findViews();
+		ViewLoader.with(R.id.class)
+				.from(view)
+				.into(this)
+				.load();
+
 
 		tvTest.setText("This was a test");
 	}

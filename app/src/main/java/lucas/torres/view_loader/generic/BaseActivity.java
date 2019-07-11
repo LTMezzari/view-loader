@@ -24,9 +24,12 @@ public abstract class BaseActivity extends AppCompatActivity {
 
 		view = getWindow().getDecorView().getRootView();
 
-		new ViewLoader(R.id.class, view, this)
-				.addSuperToLoad(BaseActivity.class)
-				.findViews();
+		ViewLoader
+				.with(R.id.class)
+				.from(view)
+				.into(this)
+				.also(BaseActivity.class)
+				.loadWithLog();
 
 		onInit();
 	}

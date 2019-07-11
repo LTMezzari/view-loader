@@ -1,12 +1,13 @@
 package lucas.torres.viewloader.loader;
 
+import android.annotation.SuppressLint;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.View;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * @author Lucas T. Mezzari
@@ -14,100 +15,177 @@ import java.util.List;
  */
 public final class ViewLoader {
 
-	private static final String TAG = "ViewLoader";
-	public static boolean shouldShowLog;
+	//Declares a helper idClass
 	private Class<?> idClass;
+	//Declares a helper view
 	private View view;
+	//Declares a helper object
 	private Object object;
+	//Declares a helper list of super classes
 	private ArrayList<Class<?>> sClasses;
 
 	/**
-	 * Constructor for a View Loader instance.
-	 * If it is not needed to load super class components, the constructor and findViews is enough.
-	 *
-	 * @param idClass The R.id class of the module.
-	 * @param view View from where you want to load the components.
-	 * @param object Object in witch the components will be loaded.
+	 * Private constructor that initializes the array of supers.
 	 */
-	public ViewLoader (Class<?> idClass, View view, Object object) {
-		this.idClass = idClass;
-		this.view = view;
-		this.object = object;
+	private ViewLoader() {
+		//Initialize the list of super classes
 		this.sClasses = new ArrayList<>();
 	}
 
 	/**
-	 * Add a super class to load the components.
-	 * It is needed to get the inherited fields.
+	 * Initialize the ViewLoader instance and set it's idClass.
+	 * 
+	 * @param idClass The R.id class that contains the id's of the project.
+	 * @return A new ViewLoader Instance.
+	 */
+	public static ViewLoader with(@NonNull Class<?> idClass) {
+		//Initializes a new ViewLoader instance
+		ViewLoader instance = new ViewLoader();
+		//Set it's id class
+		instance.idClass = idClass;
+		//Return the instance
+		return instance;
+	}
+
+	/**
+	 * Set the view of the ViewLoader instance.
+	 *
+	 * @param view The view from were the components will be loaded from.
+	 * @return A ViewLoader instance.
+	 */
+	public ViewLoader from(@NonNull View view) {
+		//Set the view
+		this.view = view;
+		//Return itself
+		return this;
+	}
+
+	/**
+	 * Set the object that will receive the views.
+	 *
+	 * @param object The object that will receive the loaded views.
+	 * @return A ViewHolder instance.
+	 */
+	public ViewLoader into(@NonNull Object object) {
+		//Set the object
+		this.object = object;
+		//Return itself
+		return this;
+	}
+
+	/**
+	 * Add a super class to be loaded from.
 	 *
 	 * @param sClass The super class of the object.
-	 * @return This view loader instance.
+	 * @return A ViewHolder instance.
 	 */
-	public ViewLoader addSuperToLoad (Class<?> sClass) {
-		sClasses.add(sClass);
+	public ViewLoader also(@NonNull Class<?> sClass) {
+		//Add a super class to load from
+		this.sClasses.add(sClass);
+		//Return itself
 		return this;
 	}
 
 	/**
-	 * Add all super classes to load the components.
-	 * It is needed to get the inherited fields.
-	 *
-	 * @param sClasses The super classes of the object.
-	 * @return This view loader instance.
+	 * Load the views without log.
 	 */
-	public ViewLoader addSupersListToLoad (List<Class<?>> sClasses){
-		this.sClasses.addAll(sClasses);
-		return this;
+	public void load() {
+		//Load the views into the object without log
+		findViews(false);
 	}
 
 	/**
-	 * Add all super classes to load the components.
-	 * It is needed to get the inherited fields.
-	 *
-	 * @param sClasses The super classes of the object.
-	 * @return This view loader instance.
+	 * Load the views with log.
 	 */
-	public ViewLoader addSupersListToLoad (Class<?>... sClasses){
-		this.sClasses.addAll(Arrays.asList(sClasses));
-		return this;
+	public void loadWithLog() {
+		findViews(true);
 	}
 
 	/**
 	 * Find all views from the classes and load it in the object.
 	 *
 	 * If the variable shouldShowLog is false, no Log will be shown in the log cat.
+	 *
+	 * @param shouldShowLog A boolean variable that defines if a log should be shown
 	 */
-	public void findViews () {
-		loadComponents(idClass, view, object, object.getClass());
+	private void findViews (boolean shouldShowLog) {
+		//Validate if the instance is valid
+		validate();
+		//Load the components from the object class
+		loadComponents(object.getClass(), shouldShowLog);
 
+		//Check if there is a super to be loaded
 		if(!sClasses.isEmpty()) {
+			//Loops through the supers
 			for (Class<?> c : sClasses) {
-				loadComponents (idClass, view, object, c);
+				//Load the components from the super class
+				loadComponents (c, shouldShowLog);
 			}
 		}
 	}
 
-	private static void loadComponents (Class<?> idClass, View view, Object object, Class<?> oClass) {
+	/**
+	 * Private method that load the components from the view into the declared fields of the oCLass.
+	 *
+	 * @param oClass The object class that has the declared fields.
+	 * @param shouldShowLog A boolean that validates if a log should be shown.
+	 */
+	private void loadComponents (Class<?> oClass, boolean shouldShowLog) {
+		//Loops through the declared fields of the oCLass
 		for (Field field : oClass.getDeclaredFields()) {
+			//Check if the field is a View
 			if (!View.class.isAssignableFrom(field.getType())) {
-				if(shouldShowLog) {
-					Log.d(TAG, field.getName() + " is not a view. ("+oClass.getSimpleName()+")");
-				}
+				//Log if it should
+				log(field.getName() + " is not a view. ("+oClass.getSimpleName()+")", shouldShowLog);
+				continue;
 			}
 
+			//Get the field accessibility
 			boolean isAccessible = field.isAccessible();
+			//Set the field accessibility to true
 			field.setAccessible(true);
 
 			try {
+				//Get a id field from the idClass with the field name
 				Field id = idClass.getDeclaredField(field.getName());
+				//Set the object field value from the findViewById of the view
 				field.set(object, view.findViewById(id.getInt(idClass)));
+				//Log if it should
+				log("Loaded "+field.getName()+" into "+object.getClass().getSimpleName()+". ("+oClass.getSimpleName()+")", shouldShowLog);
 			} catch (NoSuchFieldException | IllegalAccessException e) {
-				if(shouldShowLog) {
-					Log.d(TAG, "There is no field "+field.getName()+" in ids. ("+oClass.getSimpleName()+")");
-				}
+				//Log if it should
+				log("There is no field "+field.getName()+" in ids. ("+oClass.getSimpleName()+")", shouldShowLog);
 			}
 
+			//Set the field accessibility back to normal
 			field.setAccessible(isAccessible);
+		}
+	}
+
+	/**
+	 * Private helper method that logs messages.
+	 *
+	 * @param message The message to be logged.
+	 * @param shouldShowLog If the log should be shown or not.
+	 */
+	private static void log(String message, boolean shouldShowLog) {
+		if (!shouldShowLog) return;
+		Log.d(ViewLoader.class.getSimpleName(), message);
+	}
+
+	/**
+	 * Private helper method that throw IllegalArgumentException
+	 */
+	private void validate() {
+		if (idClass == null) {
+			//If idClass is null, throw a IllegalArgumentException
+			throw new IllegalArgumentException("Missing a class of id's to link view and object.");
+		} else if (view == null) {
+			//If view is null, throw a IllegalArgumentException
+			throw new IllegalArgumentException("Missing a view to load from.");
+		} else if (object == null) {
+			//If object is null, throw a IllegalArgumentException
+			throw new IllegalArgumentException("Missing a object to load the views into.");
 		}
 	}
 }
