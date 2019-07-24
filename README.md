@@ -1,7 +1,7 @@
 # View Loader
-This is a library that loads all view components of an View into an class. For it to work, the names of the ids and variables must be equals.
+This is a library that loads all view components into a class. For it to work, the names of the ids and variables must be equal.
 
-The View Loader can slow down the application, but in many cases, it will be not noticeable.
+The View Loader can slow down the application, but in many cases, it will not be noticeable.
 
 ```java
 ViewLoader
