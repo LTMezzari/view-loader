@@ -29,10 +29,9 @@ public class TestFragment extends Fragment {
 
 	@Override
 	public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-		ViewLoader.with(R.id.class)
-				.from(view)
+		ViewLoader.get(R.id.class)
 				.into(this)
-				.load();
+				.find(view);
 
 
 		tvTest.setText("This was a test");

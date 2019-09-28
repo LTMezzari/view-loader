@@ -1,8 +1,6 @@
 package lucas.torres.viewloader.loader;
 
-import android.annotation.SuppressLint;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.View;
 
@@ -38,26 +36,13 @@ public final class ViewLoader {
 	 * @param idClass The R.id class that contains the id's of the project.
 	 * @return A new ViewLoader Instance.
 	 */
-	public static ViewLoader with(@NonNull Class<?> idClass) {
+	public static ViewLoader get(@NonNull Class<?> idClass) {
 		//Initializes a new ViewLoader instance
 		ViewLoader instance = new ViewLoader();
 		//Set it's id class
 		instance.idClass = idClass;
 		//Return the instance
 		return instance;
-	}
-
-	/**
-	 * Set the view of the ViewLoader instance.
-	 *
-	 * @param view The view from were the components will be loaded from.
-	 * @return A ViewLoader instance.
-	 */
-	public ViewLoader from(@NonNull View view) {
-		//Set the view
-		this.view = view;
-		//Return itself
-		return this;
 	}
 
 	/**
@@ -79,7 +64,7 @@ public final class ViewLoader {
 	 * @param sClass The super class of the object.
 	 * @return A ViewHolder instance.
 	 */
-	public ViewLoader also(@NonNull Class<?> sClass) {
+	public ViewLoader from(@NonNull Class<?> sClass) {
 		//Add a super class to load from
 		this.sClasses.add(sClass);
 		//Return itself
@@ -87,17 +72,26 @@ public final class ViewLoader {
 	}
 
 	/**
-	 * Load the views without log.
+	 * Set the view of the ViewLoader instance.
+	 *
+	 * @param view The view from were the components will be loaded from.
 	 */
-	public void load() {
-		//Load the views into the object without log
+	public void find(@NonNull View view) {
+		//Set the view
+		this.view = view;
+		//Find views without log
 		findViews(false);
 	}
 
 	/**
-	 * Load the views with log.
+	 * Set the view of the ViewLoader instance.
+	 *
+	 * @param view The view from were the components will be loaded from.
 	 */
-	public void loadWithLog() {
+	public void findWithLog(@NonNull View view) {
+		//Set the view
+		this.view = view;
+		//Find views with log
 		findViews(true);
 	}
 
